@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleStorage Contract Interaction</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.0/dist/ethers.umd.min.js" type="application/javascript"></script>
+</head>
+<body>
+
+    <h1>SimpleStorage Contract on Alfajores Testnet</h1>
+
+    <div>
+        <h3>Store a Favorite Number</h3>
+        <input type="number" id="favouriteNumberInput" placeholder="Enter your favorite number">
+        <button onclick="storeFavouriteNumber()">Store Number</button>
+    </div>
+
+    <div>
+        <h3>Retrieve Favorite Number</h3>
+        <button onclick="retrieveFavouriteNumber()">Retrieve Number</button>
+        <p id="retrievedNumber"></p>
+    </div>
+
+    <div>
+        <h3>Add a Person</h3>
+        <input type="text" id="nameInput" placeholder="Enter person's name">
+        <input type="number" id="personFavouriteNumberInput" placeholder="Enter person's favorite number">
+        <button onclick="addPerson()">Add Person</button>
+    </div>
+
+    <div>
+        <h3>Retrieve Favorite Number by Name</h3>
+        <input type="text" id="nameSearchInput" placeholder="Enter name to search">
+        <button onclick="retrievePersonFavouriteNumber()">Search by Name</button>
+        <p id="searchedPersonFavouriteNumber"></p>
+    </div>
+
+    <script type="text/javascript">
+        const contractAddress = "0x6b24C1350E3697d7D645Fa4C9F7C2A08c2f16485"; // Replace with your contract address
+        const abi = [
+            {
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "_name",
+                        "type": "string"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "_favouriteNumber",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "addPerson",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "_favouriteNumber",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "store",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "listofPeople",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "favouriteNumber",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "string",
+                        "name": "name",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "string",
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "name": "nameToFavoriteNumber",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "retrieve",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        let provider, signer, contract;
+
+        async function initializeEthers() {
+            // Detect if MetaMask is installed
+            if (window.ethereum) {
+                try {
+                    await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+                    contract = new ethers.Contract(contractAddress, abi, signer);
+                    console.log("MetaMask connected and Ethers initialized");
+                } catch (error) {
+                    console.error("Error connecting to MetaMask:", error);
+                }
+            } else {
+                alert("MetaMask is not installed. Please install it to use this dApp.");
+            }
+        }
+
+        async function storeFavouriteNumber() {
+            const favouriteNumber = document.getElementById('favouriteNumberInput').value;
+            if (favouriteNumber === "") {
+                alert("Please enter a favorite number.");
+                return;
+            }
+
+            try {
+                const tx = await contract.store(favouriteNumber);
+                await tx.wait();
+                alert("Favorite number stored successfully!");
+            } catch (error) {
+                console.error("Error storing favorite number:", error);
+            }
+        }
+
+        async function retrieveFavouriteNumber() {
+            try {
+                const favouriteNumber = await contract.retrieve();
+                document.getElementById('retrievedNumber').innerText = "Favorite Number: " + favouriteNumber;
+            } catch (error) {
+                console.error("Error retrieving favorite number:", error);
+            }
+        }
+
+        async function addPerson() {
+            const name = document.getElementById('nameInput').value;
+            const personFavouriteNumber = document.getElementById('personFavouriteNumberInput').value;
+
+            if (name === "" || personFavouriteNumber === "") {
+                alert("Please enter both name and favorite number.");
+                return;
+            }
+
+            try {
+                const tx = await contract.addPerson(name, personFavouriteNumber);
+                await tx.wait();
+                alert("Person added successfully!");
+            } catch (error) {
+                console.error("Error adding person:", error);
+            }
+        }
+
+        async function retrievePersonFavouriteNumber() {
+            const name = document.getElementById('nameSearchInput').value;
+
+            if (name === "") {
+                alert("Please enter a name.");
+                return;
+            }
+
+            try {
+                const favouriteNumber = await contract.nameToFavoriteNumber(name);
+                document.getElementById('searchedPersonFavouriteNumber').innerText = "Favorite Number: " + favouriteNumber;
+            } catch (error) {
+                console.error("Error retrieving person's favorite number:", error);
+            }
+        }
+
+        window.onload = initializeEthers;
+    </script>
+</body>
+</html>

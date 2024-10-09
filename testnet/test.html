@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorite Food Dapp</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.0/dist/ethers.umd.min.js" type="application/javascript"></script>
+</head>
+<body>
+    <div>
+        <h3>Set favorite food</h3>
+        <input type="text" id="favouritefood" placeholder="Enter your favorite food">
+        <button onclick="setFavouriteFood()">Store food</button>
+    </div>
+    <div>
+        <h3>Set food price</h3>
+        <input type="number" id="foodprice" placeholder="Enter favourite price">
+        <button onclick="setfoodprice()">Store foodprice</button>
+    </div>
+    
+    <div>
+        <h3>Get favorite food</h3>
+        <button onclick="getFavouriteFood()">Get favorite food</button>
+        <p id="getfavouritefood"></p>
+    </div>
+    
+    <div>
+        <h3>Get food price</h3>
+        <button onclick="getfoodprice()">Get food price</button>
+        <p id="getfoodprice"></p>
+    </div>
+
+    <script type="text/javascript">
+        const contractAddress = "0xDc6e30156A0e945A5Be4Cb156c17a2e6e15a0Ae0";
+        const abi = 
+        [
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_favouritefood",
+				"type": "string"
+			}
+		],
+		"name": "setfavouritefood",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_foodprice",
+				"type": "uint256"
+			}
+		],
+		"name": "setfoodprice",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "get",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getfoodprice",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+        ];
+
+        let provider, signer, contract;
+
+        async function initializeEthers() {
+            if (window.ethereum) {
+                try {
+                    await window.ethereum.enable();
+                    provider = new ethers.providers.Web3Provider(window.ethereum);
+                    signer = provider.getSigner();
+                    contract = new ethers.Contract(contractAddress, abi, signer);
+                    console.log("Ethers initialized");
+                } catch (error) {
+                    console.error(error);
+                }
+            } else {
+                console.error("Ethereum provider not found. Please install MetaMask.");
+            }
+        }
+
+        async function setFavouriteFood() {
+            const favouritefood = document.getElementById("favouritefood").value;
+            if (!favouritefood) {
+                console.error("Please enter a favorite food.");
+                return;
+            }
+            try {
+                const tx = await contract.setfavouritefood(favouritefood);
+                await tx.wait();
+                alert("Transaction successful, food stored:", favouritefood);
+            } catch (error) {
+                console.error("Transaction failed", error);
+            }
+        }
+        async function setfoodprice() {
+            const foodprice = document.getElementById("foodprice").value;
+            if (!foodprice) {
+                console.error("Please enter a favorite food.");
+                return;
+            }
+            try {
+                const tx = await contract.setfoodprice(foodprice);
+                await tx.wait();
+                alert("Transaction successful, food stored:", foodprice);
+            } catch (error) {
+                console.error("Transaction failed", error);
+            }
+        }
+
+        async function getFavouriteFood() {
+            try {
+                const favouritefood = await contract.get();
+                document.getElementById("getfavouritefood").innerText = favouritefood || "No favorite food set.";
+            } catch (error) {
+                console.error("Failed to get favorite food", error);
+            }
+        }
+        async function getfoodprice() {
+            try {
+                const foodprice= await contract.getfoodprice();
+                document.getElementById("getfoodprice").innerText = foodprice || "No favorite food set.";
+            } catch (error) {
+                console.error("Failed to get favorite food", error);
+            }
+        }
+
+        window.onload = initializeEthers;
+    </script>
+</body>
+</html>
